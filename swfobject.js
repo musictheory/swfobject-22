@@ -1,4 +1,4 @@
-/*!	SWFObject v2.2 <http://code.google.com/p/swfobject/> 
+/*	SWFObject v2.2 <http://code.google.com/p/swfobject/> 
 	is released under the MIT License <http://www.opensource.org/licenses/mit-license.php> 
 */
 
@@ -15,7 +15,8 @@ var swfobject = function() {
 		win = window,
 		doc = document,
 		nav = navigator,
-		
+
+		enableDetection = false, /*!musictheory.net*/
 		plugin = false,
 		domLoadFnArr = [main],
 		regObjArr = [],
@@ -175,6 +176,7 @@ var swfobject = function() {
 		- Will preferably execute onDomLoad, otherwise onload (as a fallback)
 	*/
 	function main() { 
+		if (!enableDetection) return; /*!musictheory.net*/
 		if (plugin) {
 			testPlayerVersion();
 		}
@@ -193,6 +195,11 @@ var swfobject = function() {
 	function testPlayerVersion() {
 		var b = doc.getElementsByTagName("body")[0];
 		var o = createElement(OBJECT);
+/* musictheory.net changes - start.  Make object used for detection invisible (workaround for flash blockers) */
+		o.setAttribute("width",  "1");
+		o.setAttribute("height", "1");
+		o.setAttribute("style", "visibility: hidden");
+/* musictheory.net changes - end */
 		o.setAttribute("type", FLASH_MIME_TYPE);
 		var t = b.appendChild(o);
 		if (t) {
@@ -210,7 +217,11 @@ var swfobject = function() {
 					setTimeout(arguments.callee, 10);
 					return;
 				}
-				b.removeChild(o);
+/* musictheory.net changes - start.  o may have moved in the DOM due to Flash blockers */
+                b = o ? o.parentElement : null;
+                if (b) b.removeChild(o);
+/* musictheory.net changes - end */
+//				b.removeChild(o);
 				t = null;
 				matchVersions();
 			})();
@@ -328,7 +339,7 @@ var swfobject = function() {
 			if (typeof att.height == UNDEF || (!/%$/.test(att.height) && parseInt(att.height, 10) < 137)) { att.height = "137"; }
 			doc.title = doc.title.slice(0, 47) + " - Flash Player Installation";
 			var pt = ua.ie && ua.win ? "ActiveX" : "PlugIn",
-				fv = "MMredirectURL=" + win.location.toString().replace(/&/g,"%26") + "&MMplayerType=" + pt + "&MMdoctitle=" + doc.title;
+				fv = "MMredirectURL=" + encodeURI(win.location).toString().replace(/&/g,"%26") + "&MMplayerType=" + pt + "&MMdoctitle=" + doc.title;
 			if (typeof par.flashvars != UNDEF) {
 				par.flashvars += "&" + fv;
 			}
@@ -730,7 +741,7 @@ var swfobject = function() {
 				removeSWF(objElemIdStr);
 			}
 		},
-		
+		enableDetection: function() { enableDetection = true; }, /*!musictheory.net*/
 		createCSS: function(selStr, declStr, mediaStr, newStyleBoolean) {
 			if (ua.w3) {
 				createCSS(selStr, declStr, mediaStr, newStyleBoolean);
